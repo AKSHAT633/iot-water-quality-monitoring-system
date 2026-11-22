@@ -348,9 +348,9 @@ function getLocalDemoData(path) {
 
 function ingestLocalReading(dto) {
   const isSafe = (dto.phValue >= THRESHOLDS.ph.min && dto.phValue <= THRESHOLDS.ph.max) &&
-                 (dto.tdsValue >= THRESHOLDS.tds.min && dto.tdsValue <= THRESHOLDS.tds.max) &&
-                 (dto.turbidityValue <= THRESHOLDS.turbidity.max) &&
-                 (dto.temperatureValue >= THRESHOLDS.temperature.min && dto.temperatureValue <= THRESHOLDS.temperature.max);
+    (dto.tdsValue >= THRESHOLDS.tds.min && dto.tdsValue <= THRESHOLDS.tds.max) &&
+    (dto.turbidityValue <= THRESHOLDS.turbidity.max) &&
+    (dto.temperatureValue >= THRESHOLDS.temperature.min && dto.temperatureValue <= THRESHOLDS.temperature.max);
 
   const status = isSafe ? 'SAFE' : 'UNSAFE';
   const relayStatus = isSafe ? 'OFF' : 'ON';
