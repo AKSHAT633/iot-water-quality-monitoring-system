@@ -3,9 +3,28 @@
    ========================================================= */
 
 // ---------------------- CONFIGURATION & STATE ----------------------
-const API_BASE_URL = window.location.origin && window.location.origin.startsWith('http')
-  ? `${window.location.origin}/api/v1`
-  : 'http://localhost:8080/api/v1';
+// If deploying on Vercel and your backend is on Render, you can either:
+// 1. Paste your Render backend URL below, e.g.: 'https://water-quality-backend.onrender.com'
+// 2. OR click the "API" button in the dashboard topbar to set it live without editing code!
+const RENDER_BACKEND_URL = '';
+
+function computeApiBaseUrl() {
+  const stored = localStorage.getItem('AQUAWATCH_BACKEND_URL');
+  if (stored && stored.trim().length > 0) {
+    return `${stored.trim().replace(/\/+$/, '')}/api/v1`;
+  }
+  if (RENDER_BACKEND_URL && RENDER_BACKEND_URL.trim().length > 0) {
+    return `${RENDER_BACKEND_URL.trim().replace(/\/+$/, '')}/api/v1`;
+  }
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return window.location.port === '8080'
+      ? `${window.location.origin}/api/v1`
+      : 'http://localhost:8080/api/v1';
+  }
+  return `${window.location.origin}/api/v1`;
+}
+
+let API_BASE_URL = computeApiBaseUrl();
 
 let pollIntervalMs = 10000;
 let pollTimer = null;
@@ -832,6 +851,43 @@ async function loadHistory() {
 
 // ---------------------- EVENT LISTENERS & SETUP ----------------------
 function setupEventListeners() {
+  // Backend API URL Configuration
+  const apiConfigBtn = document.getElementById('apiConfigBtn');
+  const apiConfigLabel = document.getElementById('apiConfigLabel');
+  if (apiConfigLabel) {
+    const current = localStorage.getItem('AQUAWATCH_BACKEND_URL') || RENDER_BACKEND_URL;
+    if (current) {
+      try {
+        const u = new URL(current);
+        apiConfigLabel.textContent = `API: ${u.hostname.split('.')[0]}`;
+      } catch (e) {
+        apiConfigLabel.textContent = 'API: Configured';
+      }
+    }
+  }
+
+  if (apiConfigBtn) {
+    apiConfigBtn.addEventListener('click', () => {
+      const current = localStorage.getItem('AQUAWATCH_BACKEND_URL') || RENDER_BACKEND_URL || '';
+      const input = prompt(
+        "Enter your deployed Render Backend URL:\nExample: https://your-backend.onrender.com\n(Leave blank to reset to default/local)",
+        current
+      );
+      if (input !== null) {
+        const cleaned = input.trim().replace(/\/+$/, '');
+        if (cleaned) {
+          localStorage.setItem('AQUAWATCH_BACKEND_URL', cleaned);
+          showToast(`Backend API set to: ${cleaned}`, 'safe');
+        } else {
+          localStorage.removeItem('AQUAWATCH_BACKEND_URL');
+          showToast('Reset to default API detection', 'info');
+        }
+        API_BASE_URL = computeApiBaseUrl();
+        setTimeout(() => window.location.reload(), 800);
+      }
+    });
+  }
+
   // Simulator Toolbar Toggle
   if (toggleSimBarBtn) {
     toggleSimBarBtn.addEventListener('click', () => {
