@@ -3,10 +3,8 @@
    ========================================================= */
 
 // ---------------------- CONFIGURATION & STATE ----------------------
-// If deploying on Vercel and your backend is on Render, you can either:
-// 1. Paste your Render backend URL below, e.g.: 'https://water-quality-backend.onrender.com'
-// 2. OR click the "API" button in the dashboard topbar to set it live without editing code!
-const RENDER_BACKEND_URL = '';
+// Deployed Render backend URL
+const RENDER_BACKEND_URL = 'https://iot-water-quality-monitoring-system.onrender.com';
 
 function computeApiBaseUrl() {
   const stored = localStorage.getItem('AQUAWATCH_BACKEND_URL');
