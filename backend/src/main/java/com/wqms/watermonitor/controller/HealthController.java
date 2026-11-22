@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * Simple health-check endpoint useful for verifying the backend is up,
- * both during local development and for the ESP32 to confirm connectivity.
+ * Health-check endpoint useful for verifying backend connectivity,
+ * both for development and for the ESP32 to confirm server readiness.
  */
 @RestController
 public class HealthController {
 
-    @GetMapping("/api/v1/health")
+    @GetMapping({"/api/v1/health", "/health"})
     public ApiResponse<Map<String, String>> health() {
         return ApiResponse.success("Service is up.", Map.of("status", "UP"));
     }

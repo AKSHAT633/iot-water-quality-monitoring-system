@@ -18,7 +18,7 @@
  * Libraries required (install via Arduino IDE Library Manager):
  *  - WiFi.h            (bundled with ESP32 board package)
  *  - HTTPClient.h      (bundled with ESP32 board package)
- *  - ArduinoJson        by Benoit Blanchon
+ *  - ArduinoJson        by Benoit Blanchon (v6 or v7 supported)
  *  - OneWire            by Jim Studt / Paul Stoffregen
  *  - DallasTemperature   by Miles Burton
  * =========================================================
@@ -165,7 +165,13 @@ void sendReadingToServer(float ph, float tds, float turbidity, float temperature
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
 
-  StaticJsonDocument<256> doc;
+  // ArduinoJson v6 and v7 compatibility
+  #if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument doc;
+  #else
+    StaticJsonDocument<256> doc;
+  #endif
+
   doc["deviceId"] = DEVICE_ID;
   doc["phValue"] = ph;
   doc["tdsValue"] = tds;
@@ -181,7 +187,12 @@ void sendReadingToServer(float ph, float tds, float turbidity, float temperature
     String response = http.getString();
     Serial.printf("HTTP Response code: %d\n", httpResponseCode);
     Serial.println("Response: " + response);
-    applyRelayStateFromResponse(response);
+
+    if (httpResponseCode == 200 || httpResponseCode == 201) {
+      applyRelayStateFromResponse(response);
+    } else {
+      Serial.printf("Server reported non-success HTTP status %d\n", httpResponseCode);
+    }
   } else {
     Serial.printf("HTTP POST failed. Error: %s\n", http.errorToString(httpResponseCode).c_str());
   }
@@ -190,7 +201,13 @@ void sendReadingToServer(float ph, float tds, float turbidity, float temperature
 }
 
 void applyRelayStateFromResponse(const String& jsonResponse) {
-  StaticJsonDocument<512> responseDoc;
+  // ArduinoJson v6 and v7 compatibility
+  #if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument responseDoc;
+  #else
+    StaticJsonDocument<512> responseDoc;
+  #endif
+
   DeserializationError error = deserializeJson(responseDoc, jsonResponse);
 
   if (error) {

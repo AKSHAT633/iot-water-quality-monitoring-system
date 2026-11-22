@@ -1,187 +1,461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AquaWatch — Water Quality Monitoring Station</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaWatch Pro — Intelligent Water Quality & Purification Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
+<div class="ambient-glow"></div>
 <div class="scanlines"></div>
 
+<!-- ===================== TOP NAVIGATION BAR ===================== -->
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark">
-      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M13 2C13 2 5 12.5 5 17.5C5 22.194 8.582 25 13 25C17.418 25 21 22.194 21 17.5C21 12.5 13 2 13 2Z" stroke="currentColor" stroke-width="1.6"/>
+    <div class="brand-logo-wrap">
+      <svg class="brand-icon" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2.5C14 2.5 5 14 5 19.2C5 24.17 9.03 26.5 14 26.5C18.97 26.5 23 24.17 23 19.2C23 14 14 2.5 14 2.5Z" stroke="url(#aquaGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 10C14 10 9.5 16.5 9.5 19.5C9.5 22 11.5 23.5 14 23.5C16.5 23.5 18.5 22 18.5 19.5C18.5 16.5 14 10 14 10Z" fill="url(#aquaGrad)" fill-opacity="0.3"/>
+        <defs>
+          <linearGradient id="aquaGrad" x1="5" y1="2.5" x2="23" y2="26.5" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#00f2fe"/>
+            <stop offset="1" stop-color="#4facfe"/>
+          </linearGradient>
+        </defs>
       </svg>
-    </span>
+      <span class="water-pulse"></span>
+    </div>
     <div class="brand-text">
-      <h1>AquaWatch</h1>
-      <span class="brand-sub">Automatic Water Quality Monitoring Station</span>
+      <div class="brand-title">AquaWatch <span class="badge-pro">PRO IoT</span></div>
+      <span class="brand-sub">Intelligent Telemetry & Automated Purification System</span>
     </div>
   </div>
 
-  <div class="topbar-right">
+  <div class="topbar-actions">
+    <!-- Quick Simulation Toggle Button -->
+    <button id="toggleSimBarBtn" class="pill-btn sim-btn" title="Toggle Hardware Simulator Bar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      <span>Simulator Panel</span>
+    </button>
+
+    <!-- Sound Alert Button -->
+    <button id="soundToggleBtn" class="pill-btn sound-btn" title="Toggle Sound Alarms" aria-label="Toggle Sound">
+      <svg id="soundIconOn" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+      <svg id="soundIconOff" class="hidden" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+      <span id="soundText">Audio: ON</span>
+    </button>
+
+    <!-- Auto-refresh interval dropdown -->
+    <div class="select-chip">
+      <span class="chip-label">POLL</span>
+      <select id="pollIntervalSelect">
+        <option value="5000">5 sec</option>
+        <option value="10000" selected>10 sec</option>
+        <option value="30000">30 sec</option>
+        <option value="0">Manual</option>
+      </select>
+    </div>
+
+    <!-- Manual Refresh Now Button -->
+    <button id="manualRefreshBtn" class="icon-btn" title="Refresh Now">
+      <svg id="refreshSpinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+    </button>
+
+    <!-- Device & Connection status chips -->
     <div class="device-chip">
-      <span class="chip-label">DEVICE</span>
+      <span class="chip-label">NODE</span>
       <span class="chip-value" id="deviceIdLabel">ESP32-01</span>
     </div>
+
     <div class="conn-indicator" id="connIndicator">
       <span class="dot"></span>
       <span id="connText">CONNECTING…</span>
     </div>
+
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </header>
 
+<!-- ===================== INTERACTIVE SENSOR SIMULATOR BAR ===================== -->
+<section class="simulator-toolbar" id="simulatorToolbar">
+  <div class="sim-content">
+    <div class="sim-title-group">
+      <span class="sim-badge">INTERACTIVE TEST BENCH</span>
+      <strong>Hardware & Telemetry Simulator</strong>
+      <span class="sim-desc">Test real-time dashboard reactions without physical sensors</span>
+    </div>
+    <div class="sim-buttons">
+      <button id="simSafeBtn" class="sim-action-btn safe-btn">
+        <span class="sim-dot green"></span>
+        Inject Safe Sample
+      </button>
+      <button id="simSpikeBtn" class="sim-action-btn spike-btn">
+        <span class="sim-dot red"></span>
+        Simulate Contamination Spike (Unsafe)
+      </button>
+      <button id="simAutoToggleBtn" class="sim-action-btn auto-btn">
+        <span class="sim-dot blue"></span>
+        <span id="simAutoText">Start Auto-Stream (5s)</span>
+      </button>
+      <button id="simResetBtn" class="sim-action-btn reset-btn" title="Reset to initial sample data">
+        Reset Data
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MAIN DASHBOARD ===================== -->
 <main class="dashboard">
 
-  <!-- ===================== STATUS BANNER (signature element) ===================== -->
-  <section class="status-banner" id="statusBanner" data-state="unknown">
-    <div class="wave-field" aria-hidden="true">
-      <svg class="wave wave-back" viewBox="0 0 1200 200" preserveAspectRatio="none">
-        <path d="M0,100 C150,180 350,20 600,100 C850,180 1050,20 1200,100 L1200,200 L0,200 Z"></path>
-      </svg>
-      <svg class="wave wave-front" viewBox="0 0 1200 200" preserveAspectRatio="none">
-        <path d="M0,110 C200,40 400,170 600,110 C800,50 1000,160 1200,110 L1200,200 L0,200 Z"></path>
-      </svg>
-    </div>
+  <!-- HERO ROW: Water Quality Status + WQI Gauge + Purification Relay -->
+  <div class="hero-grid">
 
-    <div class="banner-content">
-      <div class="status-left">
-        <span class="eyebrow">OVERALL WATER QUALITY</span>
-        <h2 class="status-word" id="statusWord">READING…</h2>
-        <p class="status-remarks" id="statusRemarks">Waiting for the first sensor reading to arrive.</p>
+    <!-- Overall Water Quality Status Card -->
+    <section class="status-banner" id="statusBanner" data-state="unknown">
+      <div class="wave-field" aria-hidden="true">
+        <svg class="wave wave-back" viewBox="0 0 1200 200" preserveAspectRatio="none">
+          <path d="M0,100 C150,180 350,20 600,100 C850,180 1050,20 1200,100 L1200,200 L0,200 Z"></path>
+        </svg>
+        <svg class="wave wave-front" viewBox="0 0 1200 200" preserveAspectRatio="none">
+          <path d="M0,110 C200,40 400,170 600,110 C800,50 1000,160 1200,110 L1200,200 L0,200 Z"></path>
+        </svg>
       </div>
 
-      <div class="relay-panel">
-        <span class="eyebrow">PURIFICATION RELAY</span>
-        <div class="relay-indicator" id="relayIndicator" data-relay="off">
-          <span class="relay-led"></span>
-          <span class="relay-text" id="relayText">OFF</span>
+      <div class="banner-inner">
+        <div class="status-left">
+          <span class="eyebrow"><span class="live-blink"></span>LIVE TELEMETRY STATUS</span>
+          <h2 class="status-word" id="statusWord">ANALYZING…</h2>
+          <p class="status-remarks" id="statusRemarks">Establishing connection to sensor node…</p>
         </div>
-        <span class="relay-caption" id="relayCaption">Standing by</span>
       </div>
-    </div>
+    </section>
+
+    <!-- Water Quality Index (WQI) Score Gauge Card -->
+    <section class="wqi-card">
+      <div class="card-head">
+        <span class="card-tag">WATER QUALITY INDEX</span>
+        <span class="wqi-info-tooltip" title="Composite index (0-100) calculated from pH, TDS, Turbidity and Temperature">ℹ</span>
+      </div>
+      <div class="wqi-meter-wrap">
+        <div class="wqi-svg-box">
+          <svg class="wqi-ring" viewBox="0 0 120 120">
+            <circle class="wqi-ring-bg" cx="60" cy="60" r="50"></circle>
+            <circle class="wqi-ring-progress" id="wqiRing" cx="60" cy="60" r="50"></circle>
+          </svg>
+          <div class="wqi-score-box">
+            <span class="wqi-number" id="wqiScore">--</span>
+            <span class="wqi-max">/100</span>
+          </div>
+        </div>
+        <div class="wqi-label-box">
+          <span class="wqi-rating" id="wqiRating">Calculating</span>
+          <span class="wqi-sub" id="wqiCategory">Comprehensive Safety Grade</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Purification Relay & Actuator Card -->
+    <section class="relay-card">
+      <div class="card-head">
+        <span class="card-tag">PURIFICATION ACTUATOR</span>
+        <span class="relay-mode-badge" id="relayModeBadge">AUTO SYNC</span>
+      </div>
+      <div class="relay-body">
+        <div class="relay-indicator-wrap" id="relayIndicator" data-relay="off">
+          <div class="relay-beacon">
+            <span class="beacon-pulse"></span>
+            <span class="beacon-center"></span>
+          </div>
+          <div class="relay-state-text">
+            <span class="relay-state-label" id="relayText">OFF</span>
+            <span class="relay-state-sub" id="relayCaption">Water Safe — Standby Mode</span>
+          </div>
+        </div>
+        <div class="relay-controls">
+          <button id="manualRelayToggleBtn" class="relay-toggle-btn" title="Simulate manual actuator trigger">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+            <span id="manualRelayBtnText">Test Relay Override</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===================== SENSOR METRIC GAUGES ===================== -->
+  <section class="readouts-grid">
+
+    <!-- pH Level Card -->
+    <article class="metric-card" id="card-ph" data-metric="ph">
+      <div class="metric-header">
+        <div class="metric-icon-wrap ph-theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div>
+          <h3 class="metric-title">pH Level</h3>
+          <span class="metric-standard">Safe: 6.5 – 8.5 pH</span>
+        </div>
+        <span class="metric-badge" id="phBadge">NORMAL</span>
+      </div>
+      <div class="metric-display">
+        <span class="metric-val" id="phValue">--</span>
+        <span class="metric-unit">pH</span>
+        <span class="metric-trend" id="phTrend">--</span>
+      </div>
+      <div class="gauge-slider">
+        <div class="slider-track"><div class="slider-fill" id="phFill"></div></div>
+        <div class="range-markers"><span>0</span><span>Neutral 7.0</span><span>14</span></div>
+      </div>
+    </article>
+
+    <!-- TDS (Total Dissolved Solids) Card -->
+    <article class="metric-card" id="card-tds" data-metric="tds">
+      <div class="metric-header">
+        <div class="metric-icon-wrap tds-theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <div>
+          <h3 class="metric-title">TDS (Solids)</h3>
+          <span class="metric-standard">Safe: 50 – 500 ppm</span>
+        </div>
+        <span class="metric-badge" id="tdsBadge">NORMAL</span>
+      </div>
+      <div class="metric-display">
+        <span class="metric-val" id="tdsValue">--</span>
+        <span class="metric-unit">ppm</span>
+        <span class="metric-trend" id="tdsTrend">--</span>
+      </div>
+      <div class="gauge-slider">
+        <div class="slider-track"><div class="slider-fill" id="tdsFill"></div></div>
+        <div class="range-markers"><span>0 ppm</span><span>Max 500</span><span>1000 ppm</span></div>
+      </div>
+    </article>
+
+    <!-- Turbidity Card -->
+    <article class="metric-card" id="card-turbidity" data-metric="turbidity">
+      <div class="metric-header">
+        <div class="metric-icon-wrap turb-theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>
+        </div>
+        <div>
+          <h3 class="metric-title">Turbidity (Clarity)</h3>
+          <span class="metric-standard">Safe: ≤ 5.0 NTU</span>
+        </div>
+        <span class="metric-badge" id="turbidityBadge">CLEAR</span>
+      </div>
+      <div class="metric-display">
+        <span class="metric-val" id="turbidityValue">--</span>
+        <span class="metric-unit">NTU</span>
+        <span class="metric-trend" id="turbidityTrend">--</span>
+      </div>
+      <div class="gauge-slider">
+        <div class="slider-track"><div class="slider-fill" id="turbidityFill"></div></div>
+        <div class="range-markers"><span>0 NTU (Crystal)</span><span>Limit 5.0</span><span>20 NTU</span></div>
+      </div>
+    </article>
+
+    <!-- Water Temperature Card -->
+    <article class="metric-card" id="card-temperature" data-metric="temperature">
+      <div class="metric-header">
+        <div class="metric-icon-wrap temp-theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+        </div>
+        <div>
+          <h3 class="metric-title">Temperature</h3>
+          <span class="metric-standard">Safe: 10 – 35 °C</span>
+        </div>
+        <span class="metric-badge" id="tempBadge">OPTIMAL</span>
+      </div>
+      <div class="metric-display">
+        <span class="metric-val" id="temperatureValue">--</span>
+        <span class="metric-unit">°C</span>
+        <span class="metric-trend" id="temperatureTrend">--</span>
+      </div>
+      <div class="gauge-slider">
+        <div class="slider-track"><div class="slider-fill" id="temperatureFill"></div></div>
+        <div class="range-markers"><span>10 °C</span><span>Ideal 24 °C</span><span>50 °C</span></div>
+      </div>
+    </article>
+
   </section>
 
-  <!-- ===================== LIVE SENSOR READOUTS ===================== -->
-  <section class="readouts">
-
-    <article class="gauge-card" data-metric="ph">
-      <div class="gauge-head">
-        <span class="gauge-label">pH LEVEL</span>
-        <span class="gauge-range">Safe 6.5 – 8.5</span>
-      </div>
-      <div class="gauge-value">
-        <span id="phValue">--</span><span class="gauge-unit">pH</span>
-      </div>
-      <div class="gauge-track"><div class="gauge-fill" id="phFill"></div></div>
-    </article>
-
-    <article class="gauge-card" data-metric="tds">
-      <div class="gauge-head">
-        <span class="gauge-label">TDS</span>
-        <span class="gauge-range">Safe 50 – 500 ppm</span>
-      </div>
-      <div class="gauge-value">
-        <span id="tdsValue">--</span><span class="gauge-unit">ppm</span>
-      </div>
-      <div class="gauge-track"><div class="gauge-fill" id="tdsFill"></div></div>
-    </article>
-
-    <article class="gauge-card" data-metric="turbidity">
-      <div class="gauge-head">
-        <span class="gauge-label">TURBIDITY</span>
-        <span class="gauge-range">Safe &lt; 5 NTU</span>
-      </div>
-      <div class="gauge-value">
-        <span id="turbidityValue">--</span><span class="gauge-unit">NTU</span>
-      </div>
-      <div class="gauge-track"><div class="gauge-fill" id="turbidityFill"></div></div>
-    </article>
-
-    <article class="gauge-card" data-metric="temperature">
-      <div class="gauge-head">
-        <span class="gauge-label">TEMPERATURE</span>
-        <span class="gauge-range">Safe 10 – 35 °C</span>
-      </div>
-      <div class="gauge-value">
-        <span id="temperatureValue">--</span><span class="gauge-unit">°C</span>
-      </div>
-      <div class="gauge-track"><div class="gauge-fill" id="temperatureFill"></div></div>
-    </article>
-
-  </section>
-
-  <!-- ===================== STATS STRIP ===================== -->
-  <section class="stats-strip" id="statsStrip">
-    <div class="stat-item">
+  <!-- ===================== AGGREGATE STATS STRIP ===================== -->
+  <section class="stats-strip">
+    <div class="stat-card">
       <span class="stat-num" id="statTotal">0</span>
-      <span class="stat-label">Total Readings (24h)</span>
+      <span class="stat-label">Total Readings</span>
     </div>
-    <div class="stat-item">
-      <span class="stat-num safe" id="statSafePct">0%</span>
-      <span class="stat-label">Safe Rate</span>
+    <div class="stat-card">
+      <span class="stat-num safe-accent" id="statSafePct">0%</span>
+      <span class="stat-label">Water Safety Compliance</span>
     </div>
-    <div class="stat-item">
+    <div class="stat-card">
       <span class="stat-num" id="statAvgPh">--</span>
-      <span class="stat-label">Avg pH</span>
+      <span class="stat-label">24h Average pH</span>
     </div>
-    <div class="stat-item">
+    <div class="stat-card">
       <span class="stat-num" id="statAvgTds">--</span>
-      <span class="stat-label">Avg TDS (ppm)</span>
+      <span class="stat-label">24h Average TDS (ppm)</span>
     </div>
-    <div class="stat-item">
+    <div class="stat-card">
       <span class="stat-num" id="statAvgTurbidity">--</span>
-      <span class="stat-label">Avg Turbidity (NTU)</span>
+      <span class="stat-label">24h Avg Turbidity (NTU)</span>
     </div>
-    <div class="stat-item">
+    <div class="stat-card">
       <span class="stat-num" id="statAvgTemp">--</span>
-      <span class="stat-label">Avg Temp (°C)</span>
+      <span class="stat-label">24h Avg Temp (°C)</span>
     </div>
   </section>
 
-  <!-- ===================== TREND CHART ===================== -->
-  <section class="panel">
+  <!-- ===================== TREND CHART PANEL ===================== -->
+  <section class="panel chart-panel">
     <div class="panel-head">
-      <h3>Water Quality Trends</h3>
-      <span class="panel-sub">Last 50 readings</span>
+      <div class="panel-title-group">
+        <h3>Multi-Sensor Temporal Dynamics & Trend Analysis</h3>
+        <span class="panel-sub" id="chartRangeSub">Displaying real-time telemetry stream</span>
+      </div>
+
+      <div class="chart-controls">
+        <!-- Metric Toggle Pills -->
+        <div class="chart-filter-pills">
+          <button class="pill active" data-filter="all">All Parameters</button>
+          <button class="pill" data-filter="ph">pH Only</button>
+          <button class="pill" data-filter="tds">TDS Only</button>
+          <button class="pill" data-filter="turbidity">Turbidity</button>
+          <button class="pill" data-filter="temp">Temperature</button>
+        </div>
+
+        <!-- Sample Count -->
+        <div class="chart-point-selector">
+          <button class="limit-btn" data-limit="15">15 pts</button>
+          <button class="limit-btn active" data-limit="30">30 pts</button>
+          <button class="limit-btn" data-limit="50">50 pts</button>
+        </div>
+      </div>
     </div>
-    <div class="chart-wrap">
+
+    <div class="chart-container">
       <canvas id="trendChart"></canvas>
     </div>
   </section>
 
-  <!-- ===================== HISTORY TABLE ===================== -->
-  <section class="panel">
+  <!-- ===================== ALERTS LOG & DIAGNOSTIC SECTION ===================== -->
+  <div class="split-grid">
+
+    <!-- Live Alerts & Anomaly Feed -->
+    <section class="panel alert-panel">
+      <div class="panel-head">
+        <div class="panel-title-group">
+          <h3>Threshold Anomaly & Incident Log</h3>
+          <span class="panel-sub">Real-time alerts triggered by safe range deviations</span>
+        </div>
+        <button id="clearAlertsBtn" class="tiny-btn">Clear Log</button>
+      </div>
+      <div class="alert-feed-list" id="alertFeedList">
+        <div class="empty-alert-msg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>All sensor streams within safety limits. No active alerts.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Node Hardware Health & Diagnostics -->
+    <section class="panel diagnostic-panel">
+      <div class="panel-head">
+        <div class="panel-title-group">
+          <h3>ESP32 Node Telemetry & Diagnostics</h3>
+          <span class="panel-sub">Transceiver status and field diagnostics</span>
+        </div>
+      </div>
+      <div class="diag-grid">
+        <div class="diag-item">
+          <span class="diag-label">Microcontroller</span>
+          <span class="diag-val">ESP-WROOM-32 (Dual Core 240MHz)</span>
+        </div>
+        <div class="diag-item">
+          <span class="diag-label">Firmware Build</span>
+          <span class="diag-val font-mono">v1.2.0-PRO (Arduino C++)</span>
+        </div>
+        <div class="diag-item">
+          <span class="diag-label">ADC Resolution</span>
+          <span class="diag-val font-mono">12-bit (4096 levels / 3.3V)</span>
+        </div>
+        <div class="diag-item">
+          <span class="diag-label">Temperature Bus</span>
+          <span class="diag-val">Dallas OneWire (GPIO 4)</span>
+        </div>
+        <div class="diag-item">
+          <span class="diag-label">Purification Actuator</span>
+          <span class="diag-val">Solid State Relay (GPIO 26)</span>
+        </div>
+        <div class="diag-item">
+          <span class="diag-label">Backend Protocol</span>
+          <span class="diag-val font-mono">REST JSON (HTTP Keep-Alive)</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===================== HISTORICAL DATA LOG WITH EXPORT ===================== -->
+  <section class="panel history-panel">
     <div class="panel-head">
-      <h3>Historical Readings</h3>
-      <span class="panel-sub" id="historyRange">—</span>
+      <div class="panel-title-group">
+        <h3>Historical Sensor Readings</h3>
+        <span class="panel-sub" id="historyRange">Loading repository entries…</span>
+      </div>
+
+      <div class="table-actions">
+        <!-- Search filter -->
+        <div class="search-box">
+          <input type="text" id="tableSearchInput" placeholder="Filter by timestamp or value…" />
+        </div>
+
+        <!-- Status filter -->
+        <select id="statusFilterSelect" class="filter-dropdown">
+          <option value="ALL">All Statuses</option>
+          <option value="SAFE">SAFE Only</option>
+          <option value="UNSAFE">UNSAFE Only</option>
+        </select>
+
+        <!-- CSV Export Button -->
+        <button id="exportCsvBtn" class="pill-btn export-btn" title="Export as CSV spreadsheet">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export CSV
+        </button>
+
+        <!-- JSON Export Button -->
+        <button id="exportJsonBtn" class="pill-btn export-btn" title="Export as JSON file">
+          Export JSON
+        </button>
+      </div>
     </div>
+
     <div class="table-wrap">
       <table class="history-table">
         <thead>
           <tr>
             <th>Timestamp</th>
-            <th>pH</th>
+            <th>pH Level</th>
             <th>TDS (ppm)</th>
             <th>Turbidity (NTU)</th>
             <th>Temp (°C)</th>
-            <th>Status</th>
-            <th>Relay</th>
+            <th>Water Status</th>
+            <th>Actuator Relay</th>
+            <th>Diagnostics</th>
           </tr>
         </thead>
         <tbody id="historyBody">
-          <tr><td colspan="7" class="empty-row">Loading history…</td></tr>
+          <tr><td colspan="8" class="empty-row">Synchronizing with persistence layer…</td></tr>
         </tbody>
       </table>
     </div>
+
     <div class="pagination">
       <button id="prevPage" class="page-btn">← Prev</button>
       <span id="pageIndicator">Page 1</span>
@@ -191,9 +465,19 @@
 
 </main>
 
+<!-- ===================== TOAST NOTIFICATION CONTAINER ===================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===================== FOOTER ===================== -->
 <footer class="footer">
-  <span>AquaWatch IoT Monitoring · ESP32 + Spring Boot + MySQL</span>
-  <span id="lastUpdated">Never updated</span>
+  <div class="footer-left">
+    <span>AquaWatch Pro IoT Water Quality Monitoring & Purification Station</span>
+    <span class="footer-dot">•</span>
+    <span>ESP32 Firmware · Spring Boot 3 · MySQL / H2 · Chart.js</span>
+  </div>
+  <div class="footer-right">
+    <span id="lastUpdated">Synchronizing…</span>
+  </div>
 </footer>
 
 <script src="js/app.js"></script>

@@ -2,7 +2,7 @@
 
 An end-to-end IoT + Java full-stack project. An **ESP32** reads pH, TDS,
 Turbidity, and Temperature sensors and posts readings to a **Spring Boot**
-REST backend, which validates the data, stores it in **MySQL**, evaluates
+REST backend, which validates the data, stores it in **MySQL** (or **H2 in-memory DB** for zero-setup local dev), evaluates
 water-quality thresholds, and instructs the ESP32 to switch a **relay**
 (simulating a purification system) ON or OFF. A live **HTML/CSS/JS
 dashboard** displays real-time readings, historical data, and trend charts.
@@ -15,7 +15,7 @@ dashboard** displays real-time readings, historical data, and trend charts.
 |--------------|--------------------------------------------|
 | Firmware     | ESP32 (Arduino C++), analog + OneWire sensors |
 | Backend      | Java 17, Spring Boot 3, Spring Data JPA, REST |
-| Database     | MySQL 8                                     |
+| Database     | MySQL 8 or H2 In-Memory (Zero-setup Dev)   |
 | Frontend     | HTML5, CSS3, vanilla JavaScript, Chart.js   |
 | Build Tool   | Maven                                       |
 
@@ -25,33 +25,38 @@ dashboard** displays real-time readings, historical data, and trend charts.
 
 ```
 water-quality-monitoring-system/
-├── backend/                         # Spring Boot application (open in IntelliJ IDEA)
+├── backend/                         # Spring Boot application
 │   ├── pom.xml
 │   └── src/
 │       ├── main/java/com/wqms/watermonitor/
 │       │   ├── WaterMonitorApplication.java
-│       │   ├── controller/          # REST controllers
+│       │   ├── controller/          # REST controllers (/sensor-data, /health)
 │       │   ├── service/             # Business logic interfaces + impl
 │       │   ├── repository/          # Spring Data JPA repositories
-│       │   ├── entity/              # JPA entities
-│       │   ├── dto/                 # Request/response DTOs
+│       │   ├── entity/              # JPA entities (SensorData)
+│       │   ├── dto/                 # Request/response DTOs & ApiResponse
 │       │   ├── exception/           # Custom exceptions + global handler
-│       │   ├── enums/                # WaterQualityStatus, RelayStatus
+│       │   ├── enums/               # WaterQualityStatus, RelayStatus
 │       │   ├── util/                # Threshold constants
-│       │   └── config/              # CORS configuration
+│       │   └── config/              # CORS configuration & DataInitializer
 │       ├── main/resources/
-│       │   ├── application.properties
-│       │   └── static/              # Copy of the frontend (served at /)
-│       └── test/java/...            # Unit tests
+│       │   ├── application.properties    # MySQL profile (default)
+│       │   ├── application-h2.properties # H2 zero-setup profile
+│       │   └── static/              # Dashboard served directly at http://localhost:8080/
+│       └── test/java/...            # Unit tests (SensorDataServiceTest)
 ├── database/
-│   ├── schema.sql                   # Table creation script
-│   └── sample_data.sql              # Sample rows for quick testing
+│   ├── schema.sql                   # MySQL table creation script
+│   └── sample_data.sql              # Sample rows for testing
 ├── esp32/
-│   └── WaterQualityMonitor.ino      # Arduino sketch (open in Arduino IDE)
+│   └── WaterQualityMonitor.ino      # Arduino sketch (ArduinoJson v6 & v7 compatible)
 ├── frontend/                        # Standalone copy of the dashboard
 │   ├── index.html
 │   ├── css/style.css
 │   └── js/app.js
+├── scripts/                         # ESP32 Sensor Simulators (No hardware needed!)
+│   ├── simulate_esp32.js            # Node.js simulator
+│   ├── simulate_esp32.ps1           # PowerShell simulator
+│   └── simulate_esp32.py            # Python simulator
 ├── docs/
 │   └── API_DOCUMENTATION.md
 ├── .gitignore
@@ -62,170 +67,129 @@ water-quality-monitoring-system/
 
 ## How It Works
 
-1. The ESP32 reads all four sensors every 10 seconds and sends a JSON
-   payload via `POST /api/v1/sensor-data`.
-2. The Spring Boot backend validates the payload, compares each value
-   against safe thresholds, computes an overall `SAFE`/`UNSAFE` status,
-   and persists the reading to MySQL.
-3. If the reading is `UNSAFE`, the backend responds with `relayStatus: "ON"`.
-   The ESP32 reads this field and energizes the relay pin (simulating
-   activation of a purification system). Once subsequent readings return
-   to the safe range, the response switches back to `relayStatus: "OFF"`
-   and the ESP32 de-energizes the relay automatically.
-4. The web dashboard polls `/latest`, `/stats`, `/trend`, and `/history`
-   every 10 seconds and updates live gauges, the SAFE/UNSAFE banner, the
-   relay indicator, a trend chart, and a paginated history table.
+1. The ESP32 reads all four sensors every 10 seconds and sends a JSON payload via `POST /api/v1/sensor-data`.
+2. The Spring Boot backend validates the payload, compares each value against safe thresholds, computes an overall `SAFE`/`UNSAFE` status, and persists the reading.
+3. If the reading is `UNSAFE`, the backend responds with `relayStatus: "ON"`. The ESP32 reads this field and energizes the relay pin (activating the purification system). Once subsequent readings return to the safe range, the response switches back to `relayStatus: "OFF"` and the ESP32 de-energizes the relay automatically.
+4. The web dashboard polls `/latest`, `/stats`, `/trend`, and `/history` every 10 seconds and updates live gauges, the SAFE/UNSAFE banner, the relay indicator, a trend chart, and a paginated history table.
 
 ---
 
 ## Prerequisites
 
 - **Java 17** (JDK)
-- **Maven 3.8+** (or use IntelliJ's bundled Maven)
-- **MySQL 8** running locally
-- **IntelliJ IDEA** (Community or Ultimate) for the backend
-- **Arduino IDE 2.x** for the ESP32 firmware
-- An ESP32 dev board + pH / TDS / Turbidity / DS18B20 temperature sensors + relay module (optional — sample data lets you test the dashboard without hardware)
+- **Maven 3.8+** (or IntelliJ / Eclipse / VS Code Maven runner)
+- **MySQL 8** (Optional: you can also run with H2 in-memory DB without installing MySQL)
+- **Arduino IDE 2.x** (for the ESP32 firmware)
+- Hardware: ESP32 dev board + pH / TDS / Turbidity / DS18B20 temperature sensors + relay module (or use the included sensor simulators to test without hardware)
 
 ---
 
-## Running the Backend Locally
+## Running the Backend
 
-### 1. Create the database
+### Option A: Zero-Setup Mode (H2 In-Memory DB)
 
-Open MySQL and run:
-
-```bash
-mysql -u root -p < database/schema.sql
-mysql -u root -p < database/sample_data.sql   # optional: adds sample rows
-```
-
-(Alternatively, `spring.jpa.hibernate.ddl-auto=update` will auto-create the
-table on first run if you skip `schema.sql` — but the database itself,
-`water_quality_db`, must exist, which `schema.sql` also handles via
-`CREATE DATABASE IF NOT EXISTS`.)
-
-### 2. Configure credentials
-
-Edit `backend/src/main/resources/application.properties` and set your
-MySQL username/password:
-
-```properties
-spring.datasource.username=root
-spring.datasource.password=your_password
-```
-
-### 3. Open in IntelliJ IDEA
-
-- `File → Open` → select the `backend/` folder.
-- Let IntelliJ import the Maven project (it will download dependencies automatically).
-- Run `WaterMonitorApplication.java` (right-click → Run).
-- The backend starts on `http://localhost:8080`.
-
-Or from the command line:
+No MySQL installation required! Simply run with the `h2` profile:
 
 ```bash
 cd backend
-mvn clean install
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=h2
 ```
+*Note: The built-in `DataInitializer` will automatically seed initial sensor readings so the dashboard is immediately populated.*
+*H2 Web Console is available at `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:water_quality_db`).*
 
-### 4. Open the dashboard
+### Option B: MySQL Mode (Standard)
 
-Because the frontend is also copied into `src/main/resources/static`,
-simply visit:
+1. **Create the database in MySQL**:
+   ```bash
+   mysql -u root -p < database/schema.sql
+   mysql -u root -p < database/sample_data.sql   # optional: sample data
+   ```
+
+2. **Verify credentials**:
+   In `backend/src/main/resources/application.properties`:
+   ```properties
+   spring.datasource.username=root
+   spring.datasource.password=root
+   ```
+
+3. **Run the backend**:
+   ```bash
+   cd backend
+   mvn spring-boot:run
+   ```
+
+---
+
+## Opening the Dashboard
+
+The frontend is served directly by the Spring Boot backend at:
 
 ```
 http://localhost:8080/
 ```
 
-Or, to run the frontend independently (e.g. from the standalone
-`frontend/` folder), open `frontend/index.html` directly in a browser —
-`js/app.js` will automatically target `http://localhost:8080/api/v1`.
+Or, open `frontend/index.html` directly in any web browser.
+
+---
+
+## Testing Without ESP32 Hardware (Simulator)
+
+You can simulate a live ESP32 device sending real-time sensor telemetry and triggering the relay:
+
+- **Using Node.js**:
+  ```bash
+  node scripts/simulate_esp32.js
+  ```
+- **Using PowerShell**:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts\simulate_esp32.ps1
+  ```
+- **Using Python**:
+  ```bash
+  python scripts/simulate_esp32.py
+  ```
+
+Every 5th reading simulates contaminated water (acidic pH / high TDS / high turbidity) so you can watch the dashboard trigger the purification relay live!
 
 ---
 
 ## Flashing the ESP32
 
 1. Open `esp32/WaterQualityMonitor.ino` in **Arduino IDE 2.x**.
-2. Install the **ESP32 board package** (Boards Manager) if not already installed.
+2. Install the **ESP32 board package** via Boards Manager.
 3. Install these libraries via **Library Manager**:
-   - `ArduinoJson` (Benoit Blanchon)
+   - `ArduinoJson` (v6 or v7 both supported)
    - `OneWire`
    - `DallasTemperature`
-4. Update the configuration section at the top of the sketch:
+4. Update your WiFi credentials and your computer's LAN IP address:
    ```cpp
    const char* WIFI_SSID     = "YOUR_WIFI_SSID";
    const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
-   const char* SERVER_BASE_URL = "http://<your-computer-LAN-IP>:8080";
+   const char* SERVER_BASE_URL = "http://192.168.1.10:8080";
    ```
-5. Wire the sensors/relay per the pin comments at the top of the file.
-6. Select your ESP32 board + COM port, then **Upload**.
-7. Open the Serial Monitor (115200 baud) to watch readings and relay state.
-
-> Your computer and the ESP32 must be on the **same Wi-Fi network**, and
-> your firewall must allow inbound connections to port 8080.
+5. Select your ESP32 board and COM port, then click **Upload**.
+6. Open the Serial Monitor (115200 baud).
 
 ---
 
-## API Reference
+## Safe Drinking Water Thresholds
 
-See [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) for full
-endpoint documentation, request/response examples, and the business
-rules governing SAFE/UNSAFE classification and relay control.
+| Parameter    | Safe Range        | Unit |
+|--------------|-------------------|------|
+| pH           | 6.5 – 8.5         | pH   |
+| TDS          | 50 – 500          | ppm  |
+| Turbidity    | ≤ 5.0             | NTU  |
+| Temperature  | 10.0 – 35.0       | °C   |
 
-Quick reference:
-
-| Method | Endpoint                          | Purpose                          |
-|--------|------------------------------------|-----------------------------------|
-| POST   | `/api/v1/sensor-data`              | ESP32 submits a new reading        |
-| GET    | `/api/v1/sensor-data/latest`       | Latest reading (dashboard)         |
-| GET    | `/api/v1/sensor-data/history`      | Paginated history                  |
-| GET    | `/api/v1/sensor-data/trend`        | Last 50 readings for charting      |
-| GET    | `/api/v1/sensor-data/stats`        | 24h aggregate statistics           |
-| GET    | `/api/v1/sensor-data/relay-status` | Current relay state                |
-| GET    | `/api/v1/health`                   | Health check                       |
+Customizable in `com.wqms.watermonitor.util.WaterQualityThresholds.java`.
 
 ---
 
-## Safe Thresholds (default)
-
-| Parameter    | Safe Range        |
-|--------------|-------------------|
-| pH           | 6.5 – 8.5         |
-| TDS          | 50 – 500 ppm      |
-| Turbidity    | ≤ 5 NTU           |
-| Temperature  | 10 – 35 °C        |
-
-Adjust these in `backend/src/main/java/com/wqms/watermonitor/util/WaterQualityThresholds.java`.
-
----
-
-## Running Tests
+## Running Unit Tests
 
 ```bash
 cd backend
 mvn test
 ```
 
-Includes unit tests validating the SAFE/UNSAFE classification and
-relay ON/OFF business logic (`SensorDataServiceTest`).
-
----
-
-## Git
-
-This project is already initialized as a Git repository with clean,
-incremental commits. To push it to your own GitHub repository:
-
-```bash
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git branch -M main
-git push -u origin main
-```
-
----
-
-## License
-
-This project is provided as-is for educational and portfolio purposes.
+Includes unit tests validating the SAFE/UNSAFE classification and relay ON/OFF business logic (`SensorDataServiceTest`).
