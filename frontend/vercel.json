@@ -1,9 +1,23 @@
 {
   "version": 2,
-  "rewrites": [
+  "cleanUrls": true,
+  "headers": [
     {
-      "source": "/api/v1/:match*",
-      "destination": "https://iot-water-quality-monitoring-system.onrender.com/api/v1/:match*"
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
   ]
 }

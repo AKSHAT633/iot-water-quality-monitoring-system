@@ -3,8 +3,10 @@
    ========================================================= */
 
 // ---------------------- CONFIGURATION & STATE ----------------------
-// Deployed Render backend URL
-const RENDER_BACKEND_URL = 'https://iot-water-quality-monitoring-system.onrender.com';
+// Reads from Vercel Environment Variable (window.__ENV.BACKEND_URL) or default Render backend
+const RENDER_BACKEND_URL = (typeof window !== 'undefined' && window.__ENV && window.__ENV.BACKEND_URL)
+  ? window.__ENV.BACKEND_URL
+  : 'https://iot-water-quality-monitoring-system.onrender.com';
 
 function computeApiBaseUrl() {
   const stored = localStorage.getItem('AQUAWATCH_BACKEND_URL');
